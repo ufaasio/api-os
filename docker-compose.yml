@@ -1,24 +1,33 @@
 services:  
-  ipg-zarinpal:
+  ufaas-application-marketplace:
     build: app
     restart: unless-stopped
     # command: python app.py
     expose:
       - 8000
     ports:
-      - 3021:3000
+      - 3022:3000
     env_file:
       - .env
     volumes:
       - ./app:/app
     networks:
-      - ufaas-net
+      - traefik-net
       - mongo-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME}.entrypoints=web"
+      - "traefik.http.routers.${PROJECT_NAME}.rule=${URL}"
+      # - "traefik.http.routers.${PROJECT_NAME}.middlewares=https-redirect"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.rule=${URL}"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.tls=true"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=8000"
+      - "traefik.docker.network=traefik-net"
       
 networks:
   traefik-net:
-    external: true
-  ufaas-net:
     external: true
   mongo-net:
     external: true

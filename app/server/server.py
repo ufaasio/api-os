@@ -4,13 +4,11 @@ from contextlib import asynccontextmanager
 
 import fastapi
 import pydantic
+from core import exceptions
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 from json_advanced import dumps
 from usso.exceptions import USSOException
-
-from core import exceptions
 
 from . import config, db
 
@@ -39,7 +37,8 @@ app = fastapi.FastAPI(
         "name": "MIT License",
         "url": "https://github.com/mahdikiani/FastAPILaunchpad/blob/main/LICENSE",
     },
-    openapi_url="/v1/apps/zarinpal/openapi.json",
+    openapi_url=f"{config.Settings.base_path}/openapi.json",
+    docs_url=f"{config.Settings.base_path}/docs",
     lifespan=lifespan,
 )
 
@@ -104,9 +103,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from apps.business.routes import router as business_router
+from apps.extension.routes import router as apps_router
+
+app.include_router(
+    business_router, prefix=f"{config.Settings.base_path}", include_in_schema=False
+)
+app.include_router(apps_router, prefix=f"{config.Settings.base_path}")
 
 
-@app.get("/health")
+@app.get(f"{config.Settings.base_path}/health")
 async def health():
     return {"status": "UP"}
 
@@ -116,6 +122,6 @@ async def openapi():
     openapi = app.openapi()
     paths = {}
     for path in openapi["paths"]:
-        paths[f"/v1/apps/zarinpal{path}"] = openapi["paths"][path]
+        paths[f"/{config.Settings.base_path}{path}"] = openapi["paths"][path]
     openapi["paths"] = paths
     return openapi
