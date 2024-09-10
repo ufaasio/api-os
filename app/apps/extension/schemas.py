@@ -1,15 +1,16 @@
 import uuid
 
 from apps.base.schemas import BaseEntitySchema
+from pydantic import BaseModel
 
 
-class AppDomainSchema(BaseEntitySchema):
+class AppDomainSchema(BaseModel):
     homepage: str | None = None
     terms_of_service: str | None = None
     privacy_policy: str | None = None
 
 
-class AuthorizedDomainSchema(BaseEntitySchema):
+class AuthorizedDomainSchema(BaseModel):
     authorized_redirect_uris: list[str] = []
     authorized_origins: list[str] = []
 

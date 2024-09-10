@@ -1,7 +1,7 @@
 import uuid
 
 from apps.base.models import BaseEntity, BusinessEntity, OwnedEntity
-from pydantic import Field
+from pydantic import Field, field_validator
 from pymongo import ASCENDING, IndexModel
 
 from .schemas import AppDomainSchema, AuthorizedDomainSchema
@@ -37,7 +37,7 @@ class Extension(OwnedEntity):
 
     authorized_domains: AuthorizedDomainSchema = AuthorizedDomainSchema()
     test_users: list[uuid.UUID | str] = []
-    permissions: list[uuid.UUID] = []
+    permissions: list[str] = []
 
     @classmethod
     def create_exclude_set(cls) -> list[str]:
@@ -51,9 +51,10 @@ class Extension(OwnedEntity):
 
 
 class Installed(BusinessEntity):
-    extension_id: uuid.UUID
+    name: str
+    domain: str
     is_active: bool = False
-    permissions: list[Permission] = []
+    permissions: list[str] = []
 
     class Settings:
         indexes = [
@@ -61,3 +62,9 @@ class Installed(BusinessEntity):
                 [("extension_id", ASCENDING), ("app_id", ASCENDING)], unique=True
             ),
         ]
+
+    @field_validator("domain")
+    def validate_domain(cls, domain: str) -> str:
+        if domain.startswith("http"):
+            return domain
+        return f"https://{domain}"

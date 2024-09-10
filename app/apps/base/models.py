@@ -17,6 +17,8 @@ from .tasks import TaskMixin
 
 class BaseEntity(BaseEntitySchema, Document):
     class Settings:
+        __abstract__ = True
+        
         keep_nulls = False
         validate_on_save = True
 
@@ -178,6 +180,10 @@ class BaseEntity(BaseEntitySchema, Document):
 
 
 class OwnedEntity(OwnedEntitySchema, BaseEntity):
+
+    class Settings:
+        __abstract__ = True
+
     @classmethod
     async def get_item(cls, uid, user_id, *args, **kwargs) -> "OwnedEntity":
         if user_id == None:
@@ -186,6 +192,10 @@ class OwnedEntity(OwnedEntitySchema, BaseEntity):
 
 
 class BusinessEntity(BusinessEntitySchema, BaseEntity):
+
+    class Settings:
+        __abstract__ = True
+
     @classmethod
     async def get_item(cls, uid, business_name, *args, **kwargs) -> "BusinessEntity":
         if business_name == None:
@@ -199,6 +209,10 @@ class BusinessEntity(BusinessEntitySchema, BaseEntity):
 
 
 class BusinessOwnedEntity(BusinessOwnedEntitySchema, BaseEntity):
+
+    class Settings:
+        __abstract__ = True
+
     @classmethod
     async def get_item(
         cls, uid, business_name, user_id, *args, **kwargs
@@ -213,11 +227,16 @@ class BusinessOwnedEntity(BusinessOwnedEntitySchema, BaseEntity):
 
 
 class BaseEntityTaskMixin(BaseEntity, TaskMixin):
-    pass
+
+    class Settings:
+        __abstract__ = True
 
 
 class ImmutableBase(BaseEntity):
     model_config = ConfigDict(frozen=True)
+
+    class Settings:
+        __abstract__ = True
 
     @classmethod
     async def update_item(cls, item: "BaseEntity", data: dict):
@@ -229,12 +248,18 @@ class ImmutableBase(BaseEntity):
 
 
 class ImmutableOwnedEntity(ImmutableBase, OwnedEntity):
-    pass
+
+    class Settings:
+        __abstract__ = True
 
 
 class ImmutableBusinessEntity(ImmutableBase, BusinessEntity):
-    pass
+
+    class Settings:
+        __abstract__ = True
 
 
 class ImmutableBusinessOwnedEntity(ImmutableBase, BusinessOwnedEntity):
-    pass
+
+    class Settings:
+        __abstract__ = True

@@ -1,5 +1,5 @@
 services:  
-  ufaas-application-marketplace:
+  ufaas-extension:
     build: app
     restart: unless-stopped
     # command: python app.py

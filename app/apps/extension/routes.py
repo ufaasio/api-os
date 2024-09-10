@@ -1,4 +1,8 @@
+import logging
+import requests
 import aiohttp
+import httpx
+
 from apps.business.middlewares import get_business
 from apps.business.models import Business
 from apps.business.routes import AbstractBusinessBaseRouter
@@ -59,8 +63,8 @@ async def proxy_request(
 ):
     business: Business = await get_business(request)
 
-    app: Extension = await Extension.find_one(
-        Extension.name == app_name, Extension.business_name == business.name
+    app: Installed = await Installed.find_one(
+        Installed.name == app_name, Installed.business_name == business.name
     )
     if not app:
         raise exceptions.BaseHTTPException(
@@ -69,25 +73,34 @@ async def proxy_request(
             message=f"Extension {app_name} not found",
         )
 
-    url = f"{app.url}/{path}"
-    async with aiohttp.ClientSession() as session:
-        async with session.request(
+    url = f"{app.domain}/api/v1/apps/{app.name}/{path}"
+    
+    headers = dict(request.headers)
+    headers["x-original-host"] = request.url.hostname
+    headers.pop("host", None)
+    body = await request.body()
+
+    async with httpx.AsyncClient() as client:
+        response = await client.request(
             method=method,
             url=url,
-            headers=request.headers,
+            headers=headers,
             params=request.query_params,
-            data=await request.body() if method in ["POST", "PUT", "PATCH"] else None,
-        ) as response:
-            content = await response.read()
-            return Response(
-                status_code=response.status,
-                content=content,
-                headers=dict(response.headers),
-            )
+            content=body
+        )
+        return Response(
+            status_code=response.status_code,
+            content=response.content,
+            headers=dict(response.headers),
+        )
 
 
 @router.get("/{app_name}/{path:path}")
 async def get_app(request: Request, app_name: str, path: str):
+    import logging
+
+    logging.info(f"GET {app_name}/{path}")
+
     return await proxy_request(request, app_name, path, "GET")
 
 

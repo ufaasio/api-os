@@ -25,7 +25,7 @@ async def lifespan(app: fastapi.FastAPI):  # type: ignore
 
 
 app = fastapi.FastAPI(
-    title="FastAPI Launchpad",
+    title=config.Settings.project_name.replace("-", " ").title(),
     # description=DESCRIPTION,
     version="0.1.0",
     contact={
