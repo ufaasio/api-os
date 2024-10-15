@@ -103,18 +103,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from apps.business.routes import router as business_router
+from core.middlewares import DynamicCORSMiddleware
+
+app.add_middleware(DynamicCORSMiddleware)
+
 from apps.extension.routes import router as apps_router
 
-app.include_router(
-    business_router, prefix=f"{config.Settings.base_path}", include_in_schema=False
-)
 app.include_router(apps_router, prefix=f"{config.Settings.base_path}")
 
 
 @app.get(f"{config.Settings.base_path}/health")
 async def health():
-    return {"status": "UP"}
+    return {"status": "up"}
 
 
 @app.get("/openapi.json", include_in_schema=False)

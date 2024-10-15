@@ -1,12 +1,12 @@
 services:  
-  ufaas-extension:
+  api-os:
     build: app
     restart: unless-stopped
-    # command: python app.py
+    command: python app.py
     expose:
       - 8000
-    ports:
-      - 3022:3000
+    # ports:
+    #   - 3022:3000
     env_file:
       - .env
     volumes:

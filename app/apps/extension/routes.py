@@ -1,11 +1,7 @@
-import logging
-import requests
-import aiohttp
 import httpx
-
-from apps.business.middlewares import get_business
-from apps.business.models import Business
-from apps.business.routes import AbstractBusinessBaseRouter
+from ufaas_fastapi_business.middlewares import get_business
+from ufaas_fastapi_business.models import Business
+from ufaas_fastapi_business.routes import AbstractBusinessBaseRouter
 from core import exceptions
 from fastapi import APIRouter, Request, Response
 from usso.fastapi import jwt_access_security
@@ -61,6 +57,8 @@ async def proxy_request(
     path: str,
     method: str,
 ):
+    import logging
+    logging.info(f"Proxying request to {app_name}/{path}")
     business: Business = await get_business(request)
 
     app: Installed = await Installed.find_one(
@@ -74,7 +72,7 @@ async def proxy_request(
         )
 
     url = f"{app.domain}/api/v1/apps/{app.name}/{path}"
-    
+
     headers = dict(request.headers)
     headers["x-original-host"] = request.url.hostname
     headers.pop("host", None)
@@ -86,7 +84,7 @@ async def proxy_request(
             url=url,
             headers=headers,
             params=request.query_params,
-            content=body
+            content=body,
         )
         return Response(
             status_code=response.status_code,

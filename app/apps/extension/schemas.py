@@ -1,6 +1,6 @@
 import uuid
 
-from apps.base.schemas import BaseEntitySchema
+from fastapi_mongo_base.schemas import BaseEntitySchema
 from pydantic import BaseModel
 
 

@@ -1,6 +1,6 @@
 import uuid
 
-from apps.base.models import BaseEntity, BusinessEntity, OwnedEntity
+from fastapi_mongo_base.models import BaseEntity, BusinessEntity, OwnedEntity
 from pydantic import Field, field_validator
 from pymongo import ASCENDING, IndexModel
 

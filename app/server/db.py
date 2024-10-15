@@ -1,7 +1,7 @@
-from apps.base.models import BaseEntity
 from beanie import init_beanie
+from fastapi_mongo_base._utils import basic
+from fastapi_mongo_base.models import BaseEntity
 from motor.motor_asyncio import AsyncIOMotorClient
-from utils.basic import get_all_subclasses
 
 from .config import Settings
 
@@ -13,7 +13,7 @@ async def init_db():
         database=db,
         document_models=[
             cls
-            for cls in get_all_subclasses(BaseEntity)
+            for cls in basic.get_all_subclasses(BaseEntity)
             if not (
                 hasattr(cls, "Settings")
                 and getattr(cls.Settings, "__abstract__", False)
