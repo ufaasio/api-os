@@ -1,9 +1,9 @@
 import httpx
+from core import exceptions
+from fastapi import APIRouter, Request, Response
 from ufaas_fastapi_business.middlewares import get_business
 from ufaas_fastapi_business.models import Business
 from ufaas_fastapi_business.routes import AbstractBusinessBaseRouter
-from core import exceptions
-from fastapi import APIRouter, Request, Response
 from usso.fastapi import jwt_access_security
 
 from .models import Extension, Installed, Permission
@@ -58,6 +58,7 @@ async def proxy_request(
     method: str,
 ):
     import logging
+
     logging.info(f"Proxying request to {app_name}/{path}")
     business: Business = await get_business(request)
 
