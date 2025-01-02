@@ -1,16 +1,18 @@
 import httpx
-from core import exceptions
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
+from fastapi_mongo_base.core import exceptions
+from fastapi_mongo_base.schemas import PaginatedResponse
+from server.config import Settings
 from ufaas_fastapi_business.middlewares import get_business
 from ufaas_fastapi_business.models import Business
-from ufaas_fastapi_business.routes import AbstractBusinessBaseRouter
+from ufaas_fastapi_business.routes import AbstractAuthRouter
 from usso.fastapi import jwt_access_security
 
 from .models import Extension, Installed, Permission
 from .schemas import AppSchema, PermissionSchema
 
 
-class PermissionsRouter(AbstractBusinessBaseRouter[Permission, PermissionSchema]):
+class PermissionsRouter(AbstractAuthRouter[Permission, PermissionSchema]):
     def __init__(self):
         super().__init__(
             model=Permission,
@@ -18,8 +20,10 @@ class PermissionsRouter(AbstractBusinessBaseRouter[Permission, PermissionSchema]
             user_dependency=None,
         )
 
+    # TODO
 
-class ExtensionRouter(AbstractBusinessBaseRouter[Extension, AppSchema]):
+
+class ExtensionRouter(AbstractAuthRouter[Extension, AppSchema]):
     def __init__(self):
         super().__init__(
             model=Extension,
@@ -29,8 +33,10 @@ class ExtensionRouter(AbstractBusinessBaseRouter[Extension, AppSchema]):
             # tags=["Applications"],
         )
 
+    # TODO
 
-class InstalledRouter(AbstractBusinessBaseRouter[Installed, AppSchema]):
+
+class InstalledRouter(AbstractAuthRouter[Installed, AppSchema]):
     def __init__(self):
         super().__init__(
             model=Installed,
@@ -38,6 +44,37 @@ class InstalledRouter(AbstractBusinessBaseRouter[Installed, AppSchema]):
             user_dependency=jwt_access_security,
             # prefix="/apps",
             # tags=["Applications"],
+        )
+
+    # TODO
+
+    async def list_items(
+        self,
+        request: Request,
+        offset: int = Query(0, ge=0),
+        limit: int = Query(10, ge=1, le=Settings.page_max_limit),
+        type: str = Query(None),
+    ):
+        auth = await self.get_auth(request)
+        import logging
+
+        logging.info(f"List items {offset=}, {limit=}, {type=}, {auth.user_id=}")
+        limit = max(1, min(limit, Settings.page_max_limit))
+
+        items, total = await self.model.list_total_combined(
+            user_id=auth.user_id,
+            business_name=auth.business.name,
+            offset=offset,
+            limit=limit,
+            type=type,
+        )
+        items_in_schema = [self.list_item_schema(**item.model_dump()) for item in items]
+
+        return PaginatedResponse(
+            items=items_in_schema,
+            total=total,
+            offset=offset,
+            limit=limit,
         )
 
 
@@ -79,18 +116,31 @@ async def proxy_request(
     headers.pop("host", None)
     body = await request.body()
 
-    async with httpx.AsyncClient() as client:
-        response = await client.request(
-            method=method,
-            url=url,
-            headers=headers,
-            params=request.query_params,
-            content=body,
-        )
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=method,
+                url=url,
+                headers=headers,
+                params=request.query_params,
+                content=body,
+            )
+            return Response(
+                status_code=response.status_code,
+                content=response.content,
+                headers=dict(response.headers),
+            )
+    except httpx.HTTPStatusError as e:
         return Response(
-            status_code=response.status_code,
-            content=response.content,
-            headers=dict(response.headers),
+            status_code=e.response.status_code,
+            content=e.response.content,
+            headers=dict(e.response.headers),
+        )
+    except Exception as e:
+        return Response(
+            status_code=500,
+            content=str(e),
+            headers={},
         )
 
 

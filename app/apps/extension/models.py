@@ -1,10 +1,11 @@
 import uuid
 
+from beanie.odm.queries.find import FindMany
 from fastapi_mongo_base.models import BaseEntity, BusinessEntity, OwnedEntity
-from pydantic import Field, field_validator
+from pydantic import Field
 from pymongo import ASCENDING, IndexModel
 
-from .schemas import AppDomainSchema, AuthorizedDomainSchema
+from .schemas import AppDomainSchema, AppSchema, AuthorizedDomainSchema
 
 
 class Permission(BaseEntity):
@@ -20,9 +21,7 @@ class Permission(BaseEntity):
         ]
 
 
-class Extension(OwnedEntity):
-    name: str
-    domain: str
+class Extension(AppSchema, OwnedEntity):
     api_doc_url: str
     is_active: bool = False
     needed_data: dict = {}
@@ -39,32 +38,42 @@ class Extension(OwnedEntity):
     test_users: list[uuid.UUID | str] = []
     permissions: list[str] = []
 
-    @classmethod
-    def create_exclude_set(cls) -> list[str]:
-        return super().create_exclude_set() + ["is_active"]
-
     class Settings:
-        indexes = [
+        indexes = OwnedEntity.Settings.indexes + [
             IndexModel([("name", ASCENDING)], unique=True),
             IndexModel([("domain", ASCENDING)], unique=True),
         ]
 
+    @classmethod
+    def create_exclude_set(cls) -> list[str]:
+        return super().create_exclude_set() + ["is_active"]
 
-class Installed(BusinessEntity):
-    name: str
-    domain: str
-    is_active: bool = False
+
+class Installed(AppSchema, BusinessEntity):
+    is_active: bool = True
     permissions: list[str] = []
 
     class Settings:
-        indexes = [
+        indexes = BusinessEntity.Settings.indexes + [
             IndexModel(
-                [("extension_id", ASCENDING), ("app_id", ASCENDING)], unique=True
+                [("name", ASCENDING), ("business_name", ASCENDING)], unique=True
+            ),
+            IndexModel(
+                [("domain", ASCENDING), ("business_name", ASCENDING)], unique=True
             ),
         ]
 
-    @field_validator("domain")
-    def validate_domain(cls, domain: str) -> str:
-        if domain.startswith("http"):
-            return domain
-        return f"https://{domain}"
+    @classmethod
+    def get_query(
+        cls,
+        user_id: uuid.UUID = None,
+        business_name: str = None,
+        is_deleted: bool = False,
+        type: str = None,
+        *args,
+        **kwargs
+    ) -> FindMany:
+        query = super().get_query(user_id, business_name, is_deleted, *args, **kwargs)
+        if type:
+            query = query.find(cls.type == type)
+        return query

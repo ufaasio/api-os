@@ -1,5 +1,5 @@
+from fastapi_mongo_base.utils.aionetwork import aio_request
 from server.config import Settings
-from utils.aionetwork import aio_request
 
 
 async def get_app_credentials():

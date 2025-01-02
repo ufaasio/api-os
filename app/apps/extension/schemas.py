@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 
 from fastapi_mongo_base.schemas import BaseEntitySchema
 from pydantic import BaseModel
@@ -26,9 +27,21 @@ class AuthorizedDomainSchema(BaseModel):
         )
 
 
+class AppType(str, Enum):
+    basic = "basic"
+    ipg = "ipg"
+
+
 class AppSchema(BaseEntitySchema):
     name: str
     domain: str
+    type: AppType = AppType.basic
+
+    # @field_validator
+    # def validate_domain(cls, domain: str):
+    #     if not domain.startswith("http"):
+    #         domain = f"https://{domain}"
+    #     return domain
 
 
 class PermissionSchema(BaseEntitySchema):

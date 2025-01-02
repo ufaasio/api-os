@@ -15,5 +15,5 @@ usso[fastapi]
 
 beanie
 fastapi-mongo-base
-ufaas-fastapi-business>=0.2.4
+ufaas-fastapi-business
 httpx
