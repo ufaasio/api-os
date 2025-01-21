@@ -124,6 +124,7 @@ async def proxy_request(
                 headers=headers,
                 params=request.query_params,
                 content=body,
+                timeout=None,
             )
             return Response(
                 status_code=response.status_code,
