@@ -1,11 +1,12 @@
 import fastapi
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from ufaas_fastapi_business.models import Business
 
 
 class DynamicCORSMiddleware(BaseHTTPMiddleware):
     async def get_allowed_origins(self, origin, **kwargs):
+        from ufaas_fastapi_business.models import Business
+        
         business = await Business.get_by_origin(origin)
         if not business:
             return []
