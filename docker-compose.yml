@@ -16,7 +16,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.${PROJECT_NAME}.entrypoints=web"
       - "traefik.http.routers.${PROJECT_NAME}.rule=${URL}"
-      # - "traefik.http.routers.${PROJECT_NAME}.middlewares=https-redirect"
+      - "traefik.http.routers.${PROJECT_NAME}.middlewares=https-redirect"
       - "traefik.http.routers.${PROJECT_NAME}-secure.entrypoints=websecure"
       - "traefik.http.routers.${PROJECT_NAME}-secure.rule=${URL}"
       - "traefik.http.routers.${PROJECT_NAME}-secure.tls=true"
