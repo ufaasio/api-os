@@ -3,6 +3,8 @@ services:
     build: app
     restart: unless-stopped
     command: python app.py
+    deploy:
+      replicas: 1
     # ports:
     #   - 3022:3000
     env_file:
@@ -31,4 +33,4 @@ networks:
   mongo-net:
     external: true
   ufaas-net:
-    external: true
+    name: ufaas-net
